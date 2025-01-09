@@ -526,9 +526,15 @@ def get_tts_wav(ref_wav_path, prompt_text, prompt_language, text, text_language,
         t4 = ttime()
         t.extend([t2 - t1,t3 - t2, t4 - t3])
         t1 = ttime()
-    print("%.3f\t%.3f\t%.3f\t%.3f" % 
-           (t[0], sum(t[1::3]), sum(t[2::3]), sum(t[3::3]))
-           )
+    print("%.3f\t%.3f\t%.3f\t%.3f" % (t[0], sum(t[1::3]), sum(t[2::3]), sum(t[3::3])))
+    audio_output = (np.concatenate(audio_opt, 0) * 32768).astype(np.int16)
+    output_path = "output.wav"
+    from scipy.io.wavfile import write
+
+    write(output_path, hps.data.sampling_rate, audio_output)
+    return output_path
+
+    # write(output_path, hps.data.sampling_rate, audio_output)
     yield hps.data.sampling_rate, (np.concatenate(audio_opt, 0) * 32768).astype(
         np.int16
     )
