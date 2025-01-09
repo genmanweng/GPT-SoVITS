@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   gpt-sovits:
-    image: playlet-api:1.0.0
+    image: gpt-sovits-container
     build:
       context: .
     container_name: gpt-sovits-container
