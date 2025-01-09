@@ -70,8 +70,13 @@ else:
 with open("./weight.json", "r", encoding="utf-8") as file:
     weight_data = file.read()
     weight_data = json.loads(weight_data)
-    gpt_path = os.environ.get("gpt_path", weight_data.get("GPT", {}).get(version, pretrained_gpt_name))
-    sovits_path = os.environ.get("sovits_path", weight_data.get("SoVITS", {}).get(version, pretrained_sovits_name))
+    gpt_path = os.environ.get(
+        "gpt_path", weight_data.get("GPT", {}).get(version, pretrained_gpt_name)
+    )
+    sovits_path = os.environ.get(
+        "sovits_path",
+        weight_data.get("SoVITS", {}).get(version, pretrained_sovits_name),
+    )
     if isinstance(gpt_path, list):
         gpt_path = gpt_path[0]
     if isinstance(sovits_path, list):
@@ -81,8 +86,12 @@ with open("./weight.json", "r", encoding="utf-8") as file:
 #     "gpt_path", pretrained_gpt_name
 # )
 # sovits_path = os.environ.get("sovits_path", pretrained_sovits_name)
-cnhubert_base_path = os.environ.get("cnhubert_base_path", "GPT_SoVITS/pretrained_models/chinese-hubert-base")
-bert_path = os.environ.get("bert_path", "GPT_SoVITS/pretrained_models/chinese-roberta-wwm-ext-large")
+cnhubert_base_path = os.environ.get(
+    "cnhubert_base_path", "GPT_SoVITS/pretrained_models/chinese-hubert-base"
+)
+bert_path = os.environ.get(
+    "bert_path", "GPT_SoVITS/pretrained_models/chinese-roberta-wwm-ext-large"
+)
 infer_ttswebui = os.environ.get("infer_ttswebui", 9872)
 infer_ttswebui = int(infer_ttswebui)
 is_share = os.environ.get("is_share", "False")
@@ -225,7 +234,9 @@ resample_transform_dict = {}
 def resample(audio_tensor, sr0):
     global resample_transform_dict
     if sr0 not in resample_transform_dict:
-        resample_transform_dict[sr0] = torchaudio.transforms.Resample(sr0, 24000).to(device)
+        resample_transform_dict[sr0] = torchaudio.transforms.Resample(sr0, 24000).to(
+            device
+        )
     return resample_transform_dict[sr0](audio_tensor)
 
 
@@ -239,7 +250,9 @@ def change_sovits_weights(sovits_path, prompt_language=None, text_language=None)
     version, model_version, if_lora_v3 = get_sovits_version_from_path_fast(sovits_path)
     # print(sovits_path,version, model_version, if_lora_v3)
     if if_lora_v3 == True and is_exist_s2gv3 == False:
-        info = "GPT_SoVITS/pretrained_models/s2Gv3.pth" + i18n("SoVITS V3 底模缺失，无法加载相应 LoRA 权重")
+        info = "GPT_SoVITS/pretrained_models/s2Gv3.pth" + i18n(
+            "SoVITS V3 底模缺失，无法加载相应 LoRA 权重"
+        )
         gr.Warning(info)
         raise FileExistsError(info)
     dict_language = dict_language_v1 if version == "v1" else dict_language_v2
@@ -253,7 +266,10 @@ def change_sovits_weights(sovits_path, prompt_language=None, text_language=None)
             prompt_text_update = {"__type__": "update", "value": ""}
             prompt_language_update = {"__type__": "update", "value": i18n("中文")}
         if text_language in list(dict_language.keys()):
-            text_update, text_language_update = {"__type__": "update"}, {"__type__": "update", "value": text_language}
+            text_update, text_language_update = {"__type__": "update"}, {
+                "__type__": "update",
+                "value": text_language,
+            }
         else:
             text_update = {"__type__": "update", "value": ""}
             text_language_update = {"__type__": "update", "value": i18n("中文")}
@@ -272,9 +288,17 @@ def change_sovits_weights(sovits_path, prompt_language=None, text_language=None)
             text_language_update,
             {"__type__": "update", "visible": visible_sample_steps, "value": 32},
             {"__type__": "update", "visible": visible_inp_refs},
-            {"__type__": "update", "value": False, "interactive": True if model_version != "v3" else False},
+            {
+                "__type__": "update",
+                "value": False,
+                "interactive": True if model_version != "v3" else False,
+            },
             {"__type__": "update", "visible": True if model_version == "v3" else False},
-            {"__type__": "update", "value": i18n("模型加载中，请等待"), "interactive": False},
+            {
+                "__type__": "update",
+                "value": i18n("模型加载中，请等待"),
+                "interactive": False,
+            },
         )
 
     dict_s2 = load_sovits_new(sovits_path)
@@ -315,11 +339,16 @@ def change_sovits_weights(sovits_path, prompt_language=None, text_language=None)
         vq_model = vq_model.to(device)
     vq_model.eval()
     if if_lora_v3 == False:
-        print("loading sovits_%s" % model_version, vq_model.load_state_dict(dict_s2["weight"], strict=False))
+        print(
+            "loading sovits_%s" % model_version,
+            vq_model.load_state_dict(dict_s2["weight"], strict=False),
+        )
     else:
         print(
             "loading sovits_v3pretrained_G",
-            vq_model.load_state_dict(load_sovits_new(path_sovits_v3)["weight"], strict=False),
+            vq_model.load_state_dict(
+                load_sovits_new(path_sovits_v3)["weight"], strict=False
+            ),
         )
         lora_rank = dict_s2["lora_rank"]
         lora_config = LoraConfig(
@@ -344,7 +373,11 @@ def change_sovits_weights(sovits_path, prompt_language=None, text_language=None)
         text_language_update,
         {"__type__": "update", "visible": visible_sample_steps, "value": 32},
         {"__type__": "update", "visible": visible_inp_refs},
-        {"__type__": "update", "value": False, "interactive": True if model_version != "v3" else False},
+        {
+            "__type__": "update",
+            "value": False,
+            "interactive": True if model_version != "v3" else False,
+        },
         {"__type__": "update", "visible": True if model_version == "v3" else False},
         {"__type__": "update", "value": i18n("合成语音"), "interactive": True},
     )
@@ -396,7 +429,8 @@ def init_bigvgan():
     from BigVGAN import bigvgan
 
     bigvgan_model = bigvgan.BigVGAN.from_pretrained(
-        "%s/GPT_SoVITS/pretrained_models/models--nvidia--bigvgan_v2_24khz_100band_256x" % (now_dir,),
+        "%s/GPT_SoVITS/pretrained_models/models--nvidia--bigvgan_v2_24khz_100band_256x"
+        % (now_dir,),
         use_cuda_kernel=False,
     )  # if True, RuntimeError: Ninja is required to load C++ extensions
     # remove weight norm in the model and set to eval mode
@@ -494,7 +528,9 @@ def get_phones_and_bert(text, language, version, final=False):
                 formattext = chinese.mix_text_normalize(formattext)
                 return get_phones_and_bert(formattext, "zh", version)
             else:
-                phones, word2ph, norm_text = clean_text_inf(formattext, language, version)
+                phones, word2ph, norm_text = clean_text_inf(
+                    formattext, language, version
+                )
                 bert = get_bert_feature(norm_text, word2ph).to(device)
         elif language == "all_yue" and re.search(r"[A-Za-z]", formattext):
             formattext = re.sub(r"[a-z]", lambda x: x.group(0).upper(), formattext)
@@ -607,7 +643,11 @@ def audio_sr(audio, sr):
         try:
             sr_model = AP_BWE(device, DictToAttrRecursive)
         except FileNotFoundError:
-            gr.Warning(i18n("你没有下载超分模型的参数，因此不进行超分。如想超分请先参照教程把文件下载好"))
+            gr.Warning(
+                i18n(
+                    "你没有下载超分模型的参数，因此不进行超分。如想超分请先参照教程把文件下载好"
+                )
+            )
             return audio.cpu().detach().numpy(), sr
     return sr_model(audio, sr)
 
@@ -685,7 +725,11 @@ def get_tts_wav(
             else:
                 wav16k = wav16k.to(device)
             wav16k = torch.cat([wav16k, zero_wav_torch])
-            ssl_content = ssl_model.model(wav16k.unsqueeze(0))["last_hidden_state"].transpose(1, 2)  # .float()
+            ssl_content = ssl_model.model(wav16k.unsqueeze(0))[
+                "last_hidden_state"
+            ].transpose(
+                1, 2
+            )  # .float()
             codes = vq_model.extract_latent(ssl_content)
             prompt_semantic = codes[0, 0]
             prompt = prompt_semantic.unsqueeze(0).to(device)
@@ -712,7 +756,9 @@ def get_tts_wav(
     audio_opt = []
     ###s2v3暂不支持ref_free
     if not ref_free:
-        phones1, bert1, norm_text1 = get_phones_and_bert(prompt_text, prompt_language, version)
+        phones1, bert1, norm_text1 = get_phones_and_bert(
+            prompt_text, prompt_language, version
+        )
 
     for i_text, text in enumerate(texts):
         # 解决输入目标文本的空行导致报错的问题
@@ -725,7 +771,9 @@ def get_tts_wav(
         print(i18n("前端处理后的文本(每句):"), norm_text2)
         if not ref_free:
             bert = torch.cat([bert1, bert2], 1)
-            all_phoneme_ids = torch.LongTensor(phones1 + phones2).to(device).unsqueeze(0)
+            all_phoneme_ids = (
+                torch.LongTensor(phones1 + phones2).to(device).unsqueeze(0)
+            )
         else:
             bert = bert2
             all_phoneme_ids = torch.LongTensor(phones2).to(device).unsqueeze(0)
@@ -767,8 +815,13 @@ def get_tts_wav(
             if len(refers) == 0:
                 refers = [get_spepc(hps, ref_wav_path).to(dtype).to(device)]
             audio = vq_model.decode(
-                pred_semantic, torch.LongTensor(phones2).to(device).unsqueeze(0), refers, speed=speed
-            )[0][0]  # .cpu().detach().numpy()
+                pred_semantic,
+                torch.LongTensor(phones2).to(device).unsqueeze(0),
+                refers,
+                speed=speed,
+            )[0][
+                0
+            ]  # .cpu().detach().numpy()
         else:
             refer = get_spepc(hps, ref_wav_path).to(device).to(dtype)
             phoneme_ids0 = torch.LongTensor(phones1).to(device).unsqueeze(0)
@@ -795,7 +848,9 @@ def get_tts_wav(
             # print("fea_ref",fea_ref,fea_ref.shape)
             # print("mel2",mel2)
             mel2 = mel2.to(dtype)
-            fea_todo, ge = vq_model.decode_encp(pred_semantic, phoneme_ids1, refer, ge, speed)
+            fea_todo, ge = vq_model.decode_encp(
+                pred_semantic, phoneme_ids1, refer, ge, speed
+            )
             # print("fea_todo",fea_todo)
             # print("ge",ge.abs().mean())
             cfm_resss = []
@@ -808,7 +863,11 @@ def get_tts_wav(
                 fea = torch.cat([fea_ref, fea_todo_chunk], 2).transpose(2, 1)
                 # set_seed(123)
                 cfm_res = vq_model.cfm.inference(
-                    fea, torch.LongTensor([fea.size(1)]).to(fea.device), mel2, sample_steps, inference_cfg_rate=0
+                    fea,
+                    torch.LongTensor([fea.size(1)]).to(fea.device),
+                    mel2,
+                    sample_steps,
+                    inference_cfg_rate=0,
                 )
                 cfm_res = cfm_res[:, :, mel2.shape[2] :]
                 mel2 = cfm_res[:, :, -T_min:]
@@ -927,7 +986,13 @@ def cut5(inp):
 
     for i, char in enumerate(inp):
         if char in punds:
-            if char == "." and i > 0 and i < len(inp) - 1 and inp[i - 1].isdigit() and inp[i + 1].isdigit():
+            if (
+                char == "."
+                and i > 0
+                and i < len(inp) - 1
+                and inp[i - 1].isdigit()
+                and inp[i + 1].isdigit()
+            ):
                 items.append(char)
             else:
                 items.append(char)
@@ -965,7 +1030,10 @@ def process_text(texts):
 
 def change_choices():
     SoVITS_names, GPT_names = get_weights_names(GPT_weight_root, SoVITS_weight_root)
-    return {"choices": sorted(SoVITS_names, key=custom_sort_key), "__type__": "update"}, {
+    return {
+        "choices": sorted(SoVITS_names, key=custom_sort_key),
+        "__type__": "update",
+    }, {
         "choices": sorted(GPT_names, key=custom_sort_key),
         "__type__": "update",
     }
@@ -1008,9 +1076,13 @@ def html_left(text, label="p"):
 
 with gr.Blocks(title="GPT-SoVITS WebUI") as app:
     gr.Markdown(
-        value=i18n("本软件以MIT协议开源, 作者不对软件具备任何控制力, 使用软件者、传播软件导出的声音者自负全责.")
+        value=i18n(
+            "本软件以MIT协议开源, 作者不对软件具备任何控制力, 使用软件者、传播软件导出的声音者自负全责."
+        )
         + "<br>"
-        + i18n("如不认可该条款, 则不能使用或引用软件包内任何代码和文件. 详见根目录LICENSE.")
+        + i18n(
+            "如不认可该条款, 则不能使用或引用软件包内任何代码和文件. 详见根目录LICENSE."
+        )
     )
     with gr.Group():
         gr.Markdown(html_center(i18n("模型切换"), "h3"))
@@ -1029,11 +1101,19 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
                 interactive=True,
                 scale=14,
             )
-            refresh_button = gr.Button(i18n("刷新模型路径"), variant="primary", scale=14)
-            refresh_button.click(fn=change_choices, inputs=[], outputs=[SoVITS_dropdown, GPT_dropdown])
+            refresh_button = gr.Button(
+                i18n("刷新模型路径"), variant="primary", scale=14
+            )
+            refresh_button.click(
+                fn=change_choices, inputs=[], outputs=[SoVITS_dropdown, GPT_dropdown]
+            )
         gr.Markdown(html_center(i18n("*请上传并填写参考信息"), "h3"))
         with gr.Row():
-            inp_ref = gr.Audio(label=i18n("请上传3~10秒内参考音频，超过会报错！"), type="filepath", scale=13)
+            inp_ref = gr.Audio(
+                label=i18n("请上传3~10秒内参考音频，超过会报错！"),
+                type="filepath",
+                scale=13,
+            )
             with gr.Column(scale=13):
                 ref_text_free = gr.Checkbox(
                     label=i18n("开启无参考文本模式。不填参考文本亦相当于开启。")
@@ -1047,10 +1127,18 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
                     html_left(
                         i18n("使用无参考文本模式时建议使用微调的GPT")
                         + "<br>"
-                        + i18n("听不清参考音频说的啥(不晓得写啥)可以开。开启后无视填写的参考文本。")
+                        + i18n(
+                            "听不清参考音频说的啥(不晓得写啥)可以开。开启后无视填写的参考文本。"
+                        )
                     )
                 )
-                prompt_text = gr.Textbox(label=i18n("参考音频的文本"), value="", lines=5, max_lines=5, scale=1)
+                prompt_text = gr.Textbox(
+                    label=i18n("参考音频的文本"),
+                    value="",
+                    lines=5,
+                    max_lines=5,
+                    scale=1,
+                )
             with gr.Column(scale=14):
                 prompt_language = gr.Dropdown(
                     label=i18n("参考音频的语种"),
@@ -1098,7 +1186,9 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
         gr.Markdown(html_center(i18n("*请填写需要合成的目标文本和语种模式"), "h3"))
         with gr.Row():
             with gr.Column(scale=13):
-                text = gr.Textbox(label=i18n("需要合成的文本"), value="", lines=26, max_lines=26)
+                text = gr.Textbox(
+                    label=i18n("需要合成的文本"), value="", lines=26, max_lines=26
+                )
             with gr.Column(scale=7):
                 text_language = gr.Dropdown(
                     label=i18n("需要合成的语种") + i18n(".限制范围越小判别效果越好。"),
@@ -1130,7 +1220,13 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
                 )
                 with gr.Row():
                     speed = gr.Slider(
-                        minimum=0.6, maximum=1.65, step=0.05, label=i18n("语速"), value=1, interactive=True, scale=1
+                        minimum=0.6,
+                        maximum=1.65,
+                        step=0.05,
+                        label=i18n("语速"),
+                        value=1,
+                        interactive=True,
+                        scale=1,
                     )
                     pause_second_slider = gr.Slider(
                         minimum=0.1,
@@ -1141,22 +1237,46 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
                         interactive=True,
                         scale=1,
                     )
-                gr.Markdown(html_center(i18n("GPT采样参数(无参考文本时不要太低。不懂就用默认)：")))
+                gr.Markdown(
+                    html_center(
+                        i18n("GPT采样参数(无参考文本时不要太低。不懂就用默认)：")
+                    )
+                )
                 top_k = gr.Slider(
-                    minimum=1, maximum=100, step=1, label=i18n("top_k"), value=15, interactive=True, scale=1
+                    minimum=1,
+                    maximum=100,
+                    step=1,
+                    label=i18n("top_k"),
+                    value=15,
+                    interactive=True,
+                    scale=1,
                 )
                 top_p = gr.Slider(
-                    minimum=0, maximum=1, step=0.05, label=i18n("top_p"), value=1, interactive=True, scale=1
+                    minimum=0,
+                    maximum=1,
+                    step=0.05,
+                    label=i18n("top_p"),
+                    value=1,
+                    interactive=True,
+                    scale=1,
                 )
                 temperature = gr.Slider(
-                    minimum=0, maximum=1, step=0.05, label=i18n("temperature"), value=1, interactive=True, scale=1
+                    minimum=0,
+                    maximum=1,
+                    step=0.05,
+                    label=i18n("temperature"),
+                    value=1,
+                    interactive=True,
+                    scale=1,
                 )
             # with gr.Column():
             #     gr.Markdown(value=i18n("手工调整音素。当音素框不为空时使用手工音素输入推理，无视目标文本框。"))
             #     phoneme=gr.Textbox(label=i18n("音素框"), value="")
             #     get_phoneme_button = gr.Button(i18n("目标文本转音素"), variant="primary")
         with gr.Row():
-            inference_button = gr.Button(value=i18n("合成语音"), variant="primary", size="lg", scale=25)
+            inference_button = gr.Button(
+                value=i18n("合成语音"), variant="primary", size="lg", scale=25
+            )
             output = gr.Audio(label=i18n("输出的语音"), scale=14)
 
         inference_button.click(
