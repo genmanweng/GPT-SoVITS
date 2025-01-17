@@ -11,6 +11,7 @@ services:
       - is_share=False
     volumes:
       - ./output:/workspace/output
+      - ./video_file:/workspace/video_file
       - ./logs:/workspace/logs
       - ./SoVITS_weights:/workspace/SoVITS_weights
       - ./reference:/workspace/reference
