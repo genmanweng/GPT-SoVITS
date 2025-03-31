@@ -6,6 +6,7 @@ import traceback
 import time
 import torchaudio
 from tqdm import tqdm
+
 now_dir = os.getcwd()
 sys.path.append(now_dir)
 import ffmpeg
@@ -156,11 +157,12 @@ default_v3:
   version: v3
 """
 
+
 def set_seed(seed:int):
     seed = int(seed)
     seed = seed if seed != -1 else random.randint(0, 2**32 - 1)
     print(f"Set seed to {seed}")
-    os.environ['PYTHONHASHSEED'] = str(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -208,10 +210,22 @@ class TTS_Config:
                 "bert_base_path": "GPT_SoVITS/pretrained_models/chinese-roberta-wwm-ext-large",
             },
     }
-    configs:dict = None
-    v1_languages:list = ["auto", "en", "zh", "ja",  "all_zh", "all_ja"]
-    v2_languages:list = ["auto", "auto_yue", "en", "zh", "ja", "yue", "ko", "all_zh", "all_ja", "all_yue", "all_ko"]
-    languages:list = v2_languages
+    configs: dict = None
+    v1_languages: list = ["auto", "en", "zh", "ja", "all_zh", "all_ja"]
+    v2_languages: list = [
+        "auto",
+        "auto_yue",
+        "en",
+        "zh",
+        "ja",
+        "yue",
+        "ko",
+        "all_zh",
+        "all_ja",
+        "all_yue",
+        "all_ko",
+    ]
+    languages: list = v2_languages
     # "all_zh",#全部按中文识别
     # "en",#全部按英文识别#######不变
     # "all_ja",#全部按日文识别
@@ -227,7 +241,7 @@ class TTS_Config:
     def __init__(self, configs: Union[dict, str]=None):
 
         # 设置默认配置文件路径
-        configs_base_path:str = "GPT_SoVITS/configs/"
+        configs_base_path: str = "GPT_SoVITS/configs/"
         os.makedirs(configs_base_path, exist_ok=True)
         self.configs_path:str = os.path.join(configs_base_path, "tts_infer.yaml")
 
@@ -239,7 +253,7 @@ class TTS_Config:
 
         if isinstance(configs, str):
             self.configs_path = configs
-            configs:dict = self._load_configs(self.configs_path)
+            configs: dict = self._load_configs(self.configs_path)
 
         assert isinstance(configs, dict)
         version = configs.get("version", "v2").lower()
@@ -284,14 +298,14 @@ class TTS_Config:
 
 
         self.max_sec = None
-        self.hz:int = 50
-        self.semantic_frame_rate:str = "25hz"
-        self.segment_size:int = 20480
-        self.filter_length:int = 2048
-        self.sampling_rate:int = 32000
-        self.hop_length:int = 640
-        self.win_length:int = 2048
-        self.n_speakers:int = 300
+        self.hz: int = 50
+        self.semantic_frame_rate: str = "25hz"
+        self.segment_size: int = 20480
+        self.filter_length: int = 2048
+        self.sampling_rate: int = 32000
+        self.hop_length: int = 640
+        self.win_length: int = 2048
+        self.n_speakers: int = 300
 
 
 
@@ -304,41 +318,44 @@ class TTS_Config:
         with open(configs_path, 'r', encoding='utf-8') as f:
             configs = yaml.load(f, Loader=yaml.FullLoader)
 
+
         return configs
 
-    def save_configs(self, configs_path:str=None)->None:
-        configs=deepcopy(self.default_configs)
+    def save_configs(self, configs_path: str = None) -> None:
+        configs = deepcopy(self.default_configs)
         if self.configs is not None:
             configs["custom"] = self.update_configs()
 
+
         if configs_path is None:
             configs_path = self.configs_path
-        with open(configs_path, 'w') as f:
+        with open(configs_path, "w") as f:
             yaml.dump(configs, f)
 
     def update_configs(self):
         self.config = {
-            "device"             : str(self.device),
-            "is_half"            : self.is_half,
-            "version"            : self.version,
-            "t2s_weights_path"   : self.t2s_weights_path,
-            "vits_weights_path"  : self.vits_weights_path,
-            "bert_base_path"     : self.bert_base_path,
+            "device": str(self.device),
+            "is_half": self.is_half,
+            "version": self.version,
+            "t2s_weights_path": self.t2s_weights_path,
+            "vits_weights_path": self.vits_weights_path,
+            "bert_base_path": self.bert_base_path,
             "cnhuhbert_base_path": self.cnhuhbert_base_path,
         }
         return self.config
 
-    def update_version(self, version:str)->None:
+    def update_version(self, version: str) -> None:
         self.version = version
         self.languages = self.v1_languages if self.version=="v1" else self.v2_languages
 
     def __str__(self):
         self.configs = self.update_configs()
-        string = "TTS Config".center(100, '-') + '\n'
+        string = "TTS Config".center(100, "-") + "\n"
         for k, v in self.configs.items():
             string += f"{str(k).ljust(20)}: {str(v)}\n"
-        string += "-" * 100 + '\n'
+        string += "-" * 100 + "\n"
         return string
+
 
     def __repr__(self):
         return self.__str__()
@@ -377,12 +394,12 @@ class TTS:
         self.prompt_cache:dict = {
             "ref_audio_path" : None,
             "prompt_semantic": None,
-            "refer_spec"     : [],
-            "prompt_text"    : None,
-            "prompt_lang"    : None,
-            "phones"         : None,
-            "bert_features"  : None,
-            "norm_text"      : None,
+            "refer_spec": [],
+            "prompt_text": None,
+            "prompt_lang": None,
+            "phones": None,
+            "bert_features": None,
+            "norm_text": None,
             "aux_ref_audio_paths": [],
         }
 
@@ -390,7 +407,9 @@ class TTS:
         self.stop_flag:bool = False
         self.precision:torch.dtype = torch.float16 if self.configs.is_half else torch.float32
 
-    def _init_models(self,):
+    def _init_models(
+        self,
+    ):
         self.init_t2s_weights(self.configs.t2s_weights_path)
         self.init_vits_weights(self.configs.vits_weights_path)
         self.init_bert_weights(self.configs.bert_base_path)
@@ -402,9 +421,9 @@ class TTS:
     def init_cnhuhbert_weights(self, base_path: str):
         print(f"Loading CNHuBERT weights from {base_path}")
         self.cnhuhbert_model = CNHubert(base_path)
-        self.cnhuhbert_model=self.cnhuhbert_model.eval()
+        self.cnhuhbert_model = self.cnhuhbert_model.eval()
         self.cnhuhbert_model = self.cnhuhbert_model.to(self.configs.device)
-        if self.configs.is_half and str(self.configs.device)!="cpu":
+        if self.configs.is_half and str(self.configs.device) != "cpu":
             self.cnhuhbert_model = self.cnhuhbert_model.half()
 
 
@@ -413,10 +432,11 @@ class TTS:
         print(f"Loading BERT weights from {base_path}")
         self.bert_tokenizer = AutoTokenizer.from_pretrained(base_path)
         self.bert_model = AutoModelForMaskedLM.from_pretrained(base_path)
-        self.bert_model=self.bert_model.eval()
+        self.bert_model = self.bert_model.eval()
         self.bert_model = self.bert_model.to(self.configs.device)
-        if self.configs.is_half and str(self.configs.device)!="cpu":
+        if self.configs.is_half and str(self.configs.device) != "cpu":
             self.bert_model = self.bert_model.half()
+
 
     def init_vits_weights(self, weights_path: str):
         
@@ -443,6 +463,7 @@ class TTS:
 
         self.configs.filter_length = hps["data"]["filter_length"]
         self.configs.segment_size = hps["train"]["segment_size"]
+        self.configs.sampling_rate = hps["data"]["sampling_rate"]
         self.configs.sampling_rate = hps["data"]["sampling_rate"]
         self.configs.hop_length = hps["data"]["hop_length"]
         self.configs.win_length = hps["data"]["win_length"]
@@ -497,7 +518,7 @@ class TTS:
         vits_model = vits_model.eval()
 
         self.vits_model = vits_model
-        if self.configs.is_half and str(self.configs.device)!="cpu":
+        if self.configs.is_half and str(self.configs.device) != "cpu":
             self.vits_model = self.vits_model.half()
 
 
@@ -514,7 +535,7 @@ class TTS:
         t2s_model = t2s_model.to(self.configs.device)
         t2s_model = t2s_model.eval()
         self.t2s_model = t2s_model
-        if self.configs.is_half and str(self.configs.device)!="cpu":
+        if self.configs.is_half and str(self.configs.device) != "cpu":
             self.t2s_model = self.t2s_model.half()
 
 
@@ -552,17 +573,18 @@ class TTS:
             print("Half precision is not supported on CPU.")
             return
 
+
         self.configs.is_half = enable
         self.precision = torch.float16 if enable else torch.float32
         if save:
             self.configs.save_configs()
         if enable:
             if self.t2s_model is not None:
-                self.t2s_model =self.t2s_model.half()
+                self.t2s_model = self.t2s_model.half()
             if self.vits_model is not None:
                 self.vits_model = self.vits_model.half()
             if self.bert_model is not None:
-                self.bert_model =self.bert_model.half()
+                self.bert_model = self.bert_model.half()
             if self.cnhuhbert_model is not None:
                 self.cnhuhbert_model = self.cnhuhbert_model.half()
             if self.bigvgan_model is not None:
@@ -580,11 +602,11 @@ class TTS:
                 self.bigvgan_model = self.bigvgan_model.float()
 
     def set_device(self, device: torch.device, save: bool = True):
-        '''
-            To set the device for all models.
-            Args:
-                device: torch.device, the device to use for all models.
-        '''
+        """
+        To set the device for all models.
+        Args:
+            device: torch.device, the device to use for all models.
+        """
         self.configs.device = device
         if save:
             self.configs.save_configs()
@@ -613,13 +635,15 @@ class TTS:
         self._set_ref_spec(ref_audio_path)
         self._set_ref_audio_path(ref_audio_path)
 
+
     def _set_ref_audio_path(self, ref_audio_path):
+        self.prompt_cache["ref_audio_path"] = ref_audio_path
         self.prompt_cache["ref_audio_path"] = ref_audio_path
 
     def _set_ref_spec(self, ref_audio_path):
         spec = self._get_ref_spec(ref_audio_path)
-        if self.prompt_cache["refer_spec"] in [[],None]:
-            self.prompt_cache["refer_spec"]=[spec]
+        if self.prompt_cache["refer_spec"] in [[], None]:
+            self.prompt_cache["refer_spec"] = [spec]
         else:
             self.prompt_cache["refer_spec"][0] = spec
 
@@ -631,8 +655,9 @@ class TTS:
 
         audio = load_audio(ref_audio_path, int(self.configs.sampling_rate))
         audio = torch.FloatTensor(audio)
-        maxx=audio.abs().max()
-        if(maxx>1):audio/=min(2,maxx)
+        maxx = audio.abs().max()
+        if maxx > 1:
+            audio /= min(2, maxx)
         audio_norm = audio
         audio_norm = audio_norm.unsqueeze(0)
         spec = spectrogram_torch(
@@ -648,14 +673,14 @@ class TTS:
             spec = spec.half()
         return spec
 
-    def _set_prompt_semantic(self, ref_wav_path:str):
+    def _set_prompt_semantic(self, ref_wav_path: str):
         zero_wav = np.zeros(
             int(self.configs.sampling_rate * 0.3),
             dtype=np.float16 if self.configs.is_half else np.float32,
         )
         with torch.no_grad():
             wav16k, sr = librosa.load(ref_wav_path, sr=16000)
-            if (wav16k.shape[0] > 160000 or wav16k.shape[0] < 48000):
+            if wav16k.shape[0] > 160000 or wav16k.shape[0] < 48000:
                 raise OSError(i18n("参考音频在3~10秒范围外，请更换！"))
             wav16k = torch.from_numpy(wav16k)
             zero_wav_torch = torch.from_numpy(zero_wav)
@@ -673,6 +698,7 @@ class TTS:
             )  # .float()
             codes = self.vits_model.extract_latent(hubert_feature)
 
+
             prompt_semantic = codes[0, 0].to(self.configs.device)
             self.prompt_cache["prompt_semantic"] = prompt_semantic
 
@@ -681,13 +707,15 @@ class TTS:
         ndim = seq.dim()
         if axis < 0:
             axis += ndim
-        dtype:torch.dtype = seq.dtype
+        dtype: torch.dtype = seq.dtype
         pad_value = torch.tensor(pad_value, dtype=dtype)
         seq_lengths = [seq.shape[axis] for seq in sequences]
         if max_length is None:
             max_length = max(seq_lengths)
         else:
-            max_length = max(seq_lengths) if max_length < max(seq_lengths) else max_length
+            max_length = (
+                max(seq_lengths) if max_length < max(seq_lengths) else max_length
+            )
 
         padded_sequences = []
         for seq, length in zip(sequences, seq_lengths):
@@ -716,16 +744,18 @@ class TTS:
             index_and_len_list.sort(key=lambda x: x[1])
             index_and_len_list = np.array(index_and_len_list, dtype=np.int64)
 
+            index_and_len_list = np.array(index_and_len_list, dtype=np.int64)
+
             batch_index_list_len = 0
             pos = 0
-            while pos <index_and_len_list.shape[0]:
+            while pos < index_and_len_list.shape[0]:
                 # batch_index_list.append(index_and_len_list[pos:min(pos+batch_size,len(index_and_len_list))])
-                pos_end = min(pos+batch_size,index_and_len_list.shape[0])
+                pos_end = min(pos + batch_size, index_and_len_list.shape[0])
                 while pos < pos_end:
-                    batch=index_and_len_list[pos:pos_end, 1].astype(np.float32)
-                    score=batch[(pos_end-pos)//2]/(batch.mean()+1e-8)
-                    if (score>=threshold) or (pos_end-pos==1):
-                        batch_index=index_and_len_list[pos:pos_end, 0].tolist()
+                    batch = index_and_len_list[pos:pos_end, 1].astype(np.float32)
+                    score = batch[(pos_end - pos) // 2] / (batch.mean() + 1e-8)
+                    if (score >= threshold) or (pos_end - pos == 1):
+                        batch_index = index_and_len_list[pos:pos_end, 0].tolist()
                         batch_index_list_len += len(batch_index)
                         batch_index_list.append(batch_index)
                         pos = pos_end
@@ -734,9 +764,10 @@ class TTS:
 
             assert batch_index_list_len == len(data)
 
+
         else:
             for i in range(len(data)):
-                if i%batch_size == 0:
+                if i % batch_size == 0:
                     batch_index_list.append([])
                 batch_index_list[-1].append(i)
 
@@ -754,14 +785,18 @@ class TTS:
             all_phones_max_len = 0
             for item in item_list:
                 if prompt_data is not None:
-                    all_bert_features = torch.cat([prompt_data["bert_features"], item["bert_features"]], 1)\
-                                                .to(dtype=precision, device=device)
-                    all_phones = torch.LongTensor(prompt_data["phones"]+item["phones"]).to(device)
+                    all_bert_features = torch.cat(
+                        [prompt_data["bert_features"], item["bert_features"]], 1
+                    ).to(dtype=precision, device=device)
+                    all_phones = torch.LongTensor(
+                        prompt_data["phones"] + item["phones"]
+                    ).to(device)
                     phones = torch.LongTensor(item["phones"]).to(device)
                     # norm_text = prompt_data["norm_text"]+item["norm_text"]
                 else:
-                    all_bert_features = item["bert_features"]\
-                                            .to(dtype=precision, device=device)
+                    all_bert_features = item["bert_features"].to(
+                        dtype=precision, device=device
+                    )
                     phones = torch.LongTensor(item["phones"]).to(device)
                     all_phones = phones
                     # norm_text = item["norm_text"]
@@ -769,12 +804,14 @@ class TTS:
                 all_bert_max_len = max(all_bert_max_len, all_bert_features.shape[-1])
                 all_phones_max_len = max(all_phones_max_len, all_phones.shape[-1])
 
+
                 phones_list.append(phones)
                 phones_len_list.append(phones.shape[-1])
                 all_phones_list.append(all_phones)
                 all_phones_len_list.append(all_phones.shape[-1])
                 all_bert_features_list.append(all_bert_features)
                 norm_text_batch.append(item["norm_text"])
+
 
             phones_batch = phones_list
             all_phones_batch = all_phones_list
@@ -790,14 +827,17 @@ class TTS:
             # for idx, item in enumerate(all_bert_features_list):
             #     all_bert_features_batch[idx, :, : item.shape[-1]] = item
 
+
             # #### 先对phones进行embedding、对bert_features进行project，再pad到相同长度，（padding策略会影响T2S模型生成的结果，但不直接影响复读概率。影响复读概率的主要因素是mask的策略）
             # all_phones_list = [self.t2s_model.model.ar_text_embedding(item.to(self.t2s_model.device)) for item in all_phones_list]
             # all_phones_list = [F.pad(item,(0,0,0,max_len-item.shape[0]),value=0) for item in all_phones_list]
             # all_phones_batch = torch.stack(all_phones_list, dim=0)
 
+
             # all_bert_features_list = [self.t2s_model.model.bert_proj(item.to(self.t2s_model.device).transpose(0, 1)) for item in all_bert_features_list]
             # all_bert_features_list = [F.pad(item,(0,0,0,max_len-item.shape[0]), value=0) for item in all_bert_features_list]
             # all_bert_features_batch = torch.stack(all_bert_features_list, dim=0)
+
 
             batch = {
                 "phones": phones_batch,
@@ -810,38 +850,46 @@ class TTS:
             }
             _data.append(batch)
 
+
         return _data, batch_index_list
 
     def recovery_order(self, data:list, batch_index_list:list)->list:
         '''
         Recovery the order of the audio according to the batch_index_list.
 
+
         Args:
             data (List[list(torch.Tensor)]): the out of order audio .
             batch_index_list (List[list[int]]): the batch index list.
+
 
         Returns:
             list (List[torch.Tensor]): the data in the original order.
         '''
         length = len(sum(batch_index_list, []))
-        _data = [None]*length
+        _data = [None] * length
         for i, index_list in enumerate(batch_index_list):
             for j, index in enumerate(index_list):
                 _data[index] = data[i][j]
         return _data
 
-    def stop(self,):
-        '''
+    def stop(
+        self,
+    ):
+        """
         Stop the inference process.
-        '''
+        """
         self.stop_flag = True
 
+
     @torch.no_grad()
-    def run(self, inputs:dict):
+    def run(self, inputs: dict):
         """
         Text to speech inference.
 
+
         Args:
+            inputs (dict):
             inputs (dict):
                 {
                     "text": "",                   # str.(required) text to be synthesized
@@ -870,17 +918,17 @@ class TTS:
             Tuple[int, np.ndarray]: sampling rate and audio data.
         """
         ########## variables initialization ###########
-        self.stop_flag:bool = False
-        text:str = inputs.get("text", "")
-        text_lang:str = inputs.get("text_lang", "")
-        ref_audio_path:str = inputs.get("ref_audio_path", "")
-        aux_ref_audio_paths:list = inputs.get("aux_ref_audio_paths", [])
-        prompt_text:str = inputs.get("prompt_text", "")
-        prompt_lang:str = inputs.get("prompt_lang", "")
-        top_k:int = inputs.get("top_k", 5)
-        top_p:float = inputs.get("top_p", 1)
-        temperature:float = inputs.get("temperature", 1)
-        text_split_method:str = inputs.get("text_split_method", "cut0")
+        self.stop_flag: bool = False
+        text: str = inputs.get("text", "")
+        text_lang: str = inputs.get("text_lang", "")
+        ref_audio_path: str = inputs.get("ref_audio_path", "")
+        aux_ref_audio_paths: list = inputs.get("aux_ref_audio_paths", [])
+        prompt_text: str = inputs.get("prompt_text", "")
+        prompt_lang: str = inputs.get("prompt_lang", "")
+        top_k: int = inputs.get("top_k", 5)
+        top_p: float = inputs.get("top_p", 1)
+        temperature: float = inputs.get("temperature", 1)
+        text_split_method: str = inputs.get("text_split_method", "cut0")
         batch_size = inputs.get("batch_size", 1)
         batch_threshold = inputs.get("batch_threshold", 0.75)
         speed_factor = inputs.get("speed_factor", 1.0)
@@ -897,10 +945,14 @@ class TTS:
 
         if parallel_infer:
             print(i18n("并行推理模式已开启"))
-            self.t2s_model.model.infer_panel = self.t2s_model.model.infer_panel_batch_infer
+            self.t2s_model.model.infer_panel = (
+                self.t2s_model.model.infer_panel_batch_infer
+            )
         else:
             print(i18n("并行推理模式已关闭"))
-            self.t2s_model.model.infer_panel = self.t2s_model.model.infer_panel_naive_batched
+            self.t2s_model.model.infer_panel = (
+                self.t2s_model.model.infer_panel_naive_batched
+            )
 
         if return_fragment:
             print(i18n("分段返回模式已开启"))
@@ -910,7 +962,7 @@ class TTS:
 
         if split_bucket and speed_factor==1.0 and not (self.configs.is_v3_synthesizer and parallel_infer):
             print(i18n("分桶处理模式已开启"))
-        elif speed_factor!=1.0:
+        elif speed_factor != 1.0:
             print(i18n("语速调节不支持分桶处理，已自动关闭分桶处理"))
             split_bucket = False
         elif self.configs.is_v3_synthesizer and parallel_infer:
@@ -919,7 +971,7 @@ class TTS:
         else:
             print(i18n("分桶处理模式已关闭"))
 
-        if fragment_interval<0.01:
+        if fragment_interval < 0.01:
             fragment_interval = 0.01
             print(i18n("分段间隔过小，已自动设置为0.01"))
 
@@ -958,9 +1010,11 @@ class TTS:
                     continue
                 self.prompt_cache["refer_spec"].append(self._get_ref_spec(path))
 
+
         if not no_prompt_text:
             prompt_text = prompt_text.strip("\n")
-            if (prompt_text[-1] not in splits): prompt_text += "。" if prompt_lang != "en" else "."
+            if prompt_text[-1] not in splits:
+                prompt_text += "。" if prompt_lang != "en" else "."
             print(i18n("实际输入的参考文本:"), prompt_text)
             if self.prompt_cache["prompt_text"] != prompt_text:
                 phones, bert_features, norm_text = \
@@ -974,14 +1028,13 @@ class TTS:
                 self.prompt_cache["bert_features"] = bert_features
                 self.prompt_cache["norm_text"] = norm_text
 
-
-
-
         ###### text preprocessing ########
         t1 = time.perf_counter()
         data:list = None
         if not return_fragment:
-            data = self.text_preprocessor.preprocess(text, text_lang, text_split_method, self.configs.version)
+            data = self.text_preprocessor.preprocess(
+                text, text_lang, text_split_method, self.configs.version
+            )
             if len(data) == 0:
                 yield 16000, np.zeros(int(16000), dtype=np.int16)
                 return
@@ -1000,18 +1053,23 @@ class TTS:
             texts = self.text_preprocessor.pre_seg_text(text, text_lang, text_split_method)
             data = []
             for i in range(len(texts)):
-                if i%batch_size == 0:
+                if i % batch_size == 0:
                     data.append([])
                 data[-1].append(texts[i])
+
 
             def make_batch(batch_texts):
                 batch_data = []
                 print(f'############ {i18n("提取文本Bert特征")} ############')
                 for text in tqdm(batch_texts):
-                    phones, bert_features, norm_text = self.text_preprocessor.segment_and_extract_feature_for_text(text, text_lang, self.configs.version)
+                    phones, bert_features, norm_text = (
+                        self.text_preprocessor.segment_and_extract_feature_for_text(
+                            text, text_lang, self.configs.version
+                        )
+                    )
                     if phones is None:
                         continue
-                    res={
+                    res = {
                         "phones": phones,
                         "bert_features": bert_features,
                         "norm_text": norm_text,
@@ -1045,17 +1103,17 @@ class TTS:
                     if item is None:
                         continue
 
-                batch_phones:List[torch.LongTensor] = item["phones"]
+                batch_phones: List[torch.LongTensor] = item["phones"]
                 # batch_phones:torch.LongTensor = item["phones"]
-                batch_phones_len:torch.LongTensor = item["phones_len"]
-                all_phoneme_ids:torch.LongTensor = item["all_phones"]
-                all_phoneme_lens:torch.LongTensor  = item["all_phones_len"]
-                all_bert_features:torch.LongTensor = item["all_bert_features"]
-                norm_text:str = item["norm_text"]
+                batch_phones_len: torch.LongTensor = item["phones_len"]
+                all_phoneme_ids: torch.LongTensor = item["all_phones"]
+                all_phoneme_lens: torch.LongTensor = item["all_phones_len"]
+                all_bert_features: torch.LongTensor = item["all_bert_features"]
+                norm_text: str = item["norm_text"]
                 max_len = item["max_len"]
 
                 print(i18n("前端处理后的文本(每句):"), norm_text)
-                if no_prompt_text :
+                if no_prompt_text:
                     prompt = None
                 else:
                     prompt = self.prompt_cache["prompt_semantic"].expand(len(all_phoneme_ids), -1).to(self.configs.device)
@@ -1081,6 +1139,7 @@ class TTS:
 
 
                 batch_audio_fragment = []
+
 
                 # ## vits并行推理 method 1
                 # pred_semantic_list = [item[-idx:] for item, idx in zip(pred_semantic_list, idx_list)]
@@ -1191,9 +1250,10 @@ class TTS:
         finally:
             self.empty_cache()
 
+
     def empty_cache(self):
         try:
-            gc.collect() # 触发gc的垃圾回收。避免内存一直增长。
+            gc.collect()  # 触发gc的垃圾回收。避免内存一直增长。
             if "cuda" in str(self.configs.device):
                 torch.cuda.empty_cache()
             elif str(self.configs.device) == "mps":
@@ -1246,12 +1306,16 @@ class TTS:
             audio = audio.cpu().numpy()
 
         audio = (audio * 32768).astype(np.int16)
+        from scipy.io.wavfile import write
+
+        write("/workspace/video_file/output.wav", sr, audio)
 
         # try:
         #     if speed_factor != 1.0:
         #         audio = speed_change(audio, speed=speed_factor, sr=int(sr))
         # except Exception as e:
         #     print(f"Failed to change speed of audio: \n{e}")
+
 
         return sr, audio
 

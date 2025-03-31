@@ -1,11 +1,12 @@
-'''
+"""
 按中英混合识别
 按日英混合识别
 多语种启动切分识别语种
 全部按中文识别
 全部按英文识别
 全部按日文识别
-'''
+"""
+
 import logging
 import traceback,torchaudio,warnings
 logging.getLogger("markdown_it").setLevel(logging.ERROR)
@@ -45,18 +46,22 @@ pretrained_gpt_name,pretrained_sovits_name = _
 if os.path.exists(f"./weight.json"):
     pass
 else:
-    with open(f"./weight.json", 'w', encoding="utf-8") as file:json.dump({'GPT':{},'SoVITS':{}},file)
+    with open(f"./weight.json", "w", encoding="utf-8") as file:
+        json.dump({"GPT": {}, "SoVITS": {}}, file)
 
-with open(f"./weight.json", 'r', encoding="utf-8") as file:
+with open(f"./weight.json", "r", encoding="utf-8") as file:
     weight_data = file.read()
-    weight_data=json.loads(weight_data)
+    weight_data = json.loads(weight_data)
     gpt_path = os.environ.get(
-        "gpt_path", weight_data.get('GPT',{}).get(version,pretrained_gpt_name))
+        "gpt_path", weight_data.get("GPT", {}).get(version, pretrained_gpt_name)
+    )
     sovits_path = os.environ.get(
-        "sovits_path", weight_data.get('SoVITS',{}).get(version,pretrained_sovits_name))
-    if isinstance(gpt_path,list):
+        "sovits_path",
+        weight_data.get("SoVITS", {}).get(version, pretrained_sovits_name),
+    )
+    if isinstance(gpt_path, list):
         gpt_path = gpt_path[0]
-    if isinstance(sovits_path,list):
+    if isinstance(sovits_path, list):
         sovits_path = sovits_path[0]
 
 # gpt_path = os.environ.get(
@@ -108,8 +113,8 @@ from tools.my_utils import load_audio
 from tools.i18n.i18n import I18nAuto, scan_language_list
 from peft import LoraConfig, PeftModel, get_peft_model
 
-language=os.environ.get("language","Auto")
-language=sys.argv[-1] if sys.argv[-1] in scan_language_list() else language
+language = os.environ.get("language", "Auto")
+language = sys.argv[-1] if sys.argv[-1] in scan_language_list() else language
 i18n = I18nAuto(language=language)
 
 # os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'  # 确保直接启动推理UI时也能够设置。
@@ -120,27 +125,27 @@ else:
     device = "cpu"
 
 dict_language_v1 = {
-    i18n("中文"): "all_zh",#全部按中文识别
-    i18n("英文"): "en",#全部按英文识别#######不变
-    i18n("日文"): "all_ja",#全部按日文识别
-    i18n("中英混合"): "zh",#按中英混合识别####不变
-    i18n("日英混合"): "ja",#按日英混合识别####不变
-    i18n("多语种混合"): "auto",#多语种启动切分识别语种
+    i18n("中文"): "all_zh",  # 全部按中文识别
+    i18n("英文"): "en",  # 全部按英文识别#######不变
+    i18n("日文"): "all_ja",  # 全部按日文识别
+    i18n("中英混合"): "zh",  # 按中英混合识别####不变
+    i18n("日英混合"): "ja",  # 按日英混合识别####不变
+    i18n("多语种混合"): "auto",  # 多语种启动切分识别语种
 }
 dict_language_v2 = {
-    i18n("中文"): "all_zh",#全部按中文识别
-    i18n("英文"): "en",#全部按英文识别#######不变
-    i18n("日文"): "all_ja",#全部按日文识别
-    i18n("粤语"): "all_yue",#全部按中文识别
-    i18n("韩文"): "all_ko",#全部按韩文识别
-    i18n("中英混合"): "zh",#按中英混合识别####不变
-    i18n("日英混合"): "ja",#按日英混合识别####不变
-    i18n("粤英混合"): "yue",#按粤英混合识别####不变
-    i18n("韩英混合"): "ko",#按韩英混合识别####不变
-    i18n("多语种混合"): "auto",#多语种启动切分识别语种
-    i18n("多语种混合(粤语)"): "auto_yue",#多语种启动切分识别语种
+    i18n("中文"): "all_zh",  # 全部按中文识别
+    i18n("英文"): "en",  # 全部按英文识别#######不变
+    i18n("日文"): "all_ja",  # 全部按日文识别
+    i18n("粤语"): "all_yue",  # 全部按中文识别
+    i18n("韩文"): "all_ko",  # 全部按韩文识别
+    i18n("中英混合"): "zh",  # 按中英混合识别####不变
+    i18n("日英混合"): "ja",  # 按日英混合识别####不变
+    i18n("粤英混合"): "yue",  # 按粤英混合识别####不变
+    i18n("韩英混合"): "ko",  # 按韩英混合识别####不变
+    i18n("多语种混合"): "auto",  # 多语种启动切分识别语种
+    i18n("多语种混合(粤语)"): "auto_yue",  # 多语种启动切分识别语种
 }
-dict_language = dict_language_v1 if version =='v1' else dict_language_v2
+dict_language = dict_language_v1 if version == "v1" else dict_language_v2
 
 tokenizer = AutoTokenizer.from_pretrained(bert_path)
 bert_model = AutoModelForMaskedLM.from_pretrained(bert_path)
@@ -351,8 +356,9 @@ def get_spepc(hps, filename):
     # audio = load_audio(filename, int(hps.data.sampling_rate))
     audio, sampling_rate = librosa.load(filename, sr=int(hps.data.sampling_rate))
     audio = torch.FloatTensor(audio)
-    maxx=audio.abs().max()
-    if(maxx>1):audio/=min(2,maxx)
+    maxx = audio.abs().max()
+    if maxx > 1:
+        audio /= min(2, maxx)
     audio_norm = audio
     audio_norm = audio_norm.unsqueeze(0)
     spec = spectrogram_torch(
@@ -365,17 +371,21 @@ def get_spepc(hps, filename):
     )
     return spec
 
+
 def clean_text_inf(text, language, version):
     language = language.replace("all_","")
     phones, word2ph, norm_text = clean_text(text, language, version)
     phones = cleaned_text_to_sequence(phones, version)
     return phones, word2ph, norm_text
 
-dtype=torch.float16 if is_half == True else torch.float32
+
+dtype = torch.float16 if is_half == True else torch.float32
+
+
 def get_bert_inf(phones, word2ph, norm_text, language):
-    language=language.replace("all_","")
+    language = language.replace("all_", "")
     if language == "zh":
-        bert = get_bert_feature(norm_text, word2ph).to(device)#.to(dtype)
+        bert = get_bert_feature(norm_text, word2ph).to(device)  # .to(dtype)
     else:
         bert = torch.zeros(
             (1024, len(phones)),
@@ -385,7 +395,21 @@ def get_bert_inf(phones, word2ph, norm_text, language):
     return bert
 
 
-splits = {"，", "。", "？", "！", ",", ".", "?", "!", "~", ":", "：", "—", "…", }
+splits = {
+    "，",
+    "。",
+    "？",
+    "！",
+    ",",
+    ".",
+    "?",
+    "!",
+    "~",
+    ":",
+    "：",
+    "—",
+    "…",
+}
 
 
 def get_first(text):
@@ -393,8 +417,11 @@ def get_first(text):
     text = re.split(pattern, text)[0].strip()
     return text
 
+
 from text import chinese
-def get_phones_and_bert(text,language,version,final=False):
+
+
+def get_phones_and_bert(text, language, version, final=False):
     if language in {"en", "all_zh", "all_ja", "all_ko", "all_yue"}:
         formattext = text
         while "  " in formattext:
@@ -403,9 +430,11 @@ def get_phones_and_bert(text,language,version,final=False):
             if re.search(r'[A-Za-z]', formattext):
                 formattext = re.sub(r'[a-z]', lambda x: x.group(0).upper(), formattext)
                 formattext = chinese.mix_text_normalize(formattext)
-                return get_phones_and_bert(formattext,"zh",version)
+                return get_phones_and_bert(formattext, "zh", version)
             else:
-                phones, word2ph, norm_text = clean_text_inf(formattext, language, version)
+                phones, word2ph, norm_text = clean_text_inf(
+                    formattext, language, version
+                )
                 bert = get_bert_feature(norm_text, word2ph).to(device)
         elif language == "all_yue" and re.search(r'[A-Za-z]', formattext):
                 formattext = re.sub(r'[a-z]', lambda x: x.group(0).upper(), formattext)
@@ -452,12 +481,12 @@ def get_phones_and_bert(text,language,version,final=False):
             bert_list.append(bert)
         bert = torch.cat(bert_list, dim=1)
         phones = sum(phones_list, [])
-        norm_text = ''.join(norm_text_list)
+        norm_text = "".join(norm_text_list)
 
     if not final and len(phones) < 6:
-        return get_phones_and_bert("." + text,language,version,final=True)
+        return get_phones_and_bert("." + text, language, version, final=True)
 
-    return phones,bert.to(dtype),norm_text
+    return phones, bert.to(dtype), norm_text
 
 from module.mel_processing import spectrogram_torch,mel_spectrogram_torch
 spec_min = -12
@@ -487,7 +516,7 @@ def merge_short_text_in_array(texts, threshold):
         if len(text) >= threshold:
             result.append(text)
             text = ""
-    if (len(text) > 0):
+    if len(text) > 0:
         if len(result) == 0:
             result.append(text)
         else:
@@ -512,10 +541,14 @@ def audio_sr(audio,sr):
 cache= {}
 def get_tts_wav(ref_wav_path, prompt_text, prompt_language, text, text_language, how_to_cut=i18n("不切"), top_k=20, top_p=0.6, temperature=0.6, ref_free = False,speed=1,if_freeze=False,inp_refs=None,sample_steps=8,if_sr=False,pause_second=0.3):
     global cache
-    if ref_wav_path:pass
-    else:gr.Warning(i18n('请上传参考音频'))
-    if text:pass
-    else:gr.Warning(i18n('请填入推理文本'))
+    if ref_wav_path:
+        pass
+    else:
+        gr.Warning(i18n("请上传参考音频"))
+    if text:
+        pass
+    else:
+        gr.Warning(i18n("请填入推理文本"))
     t = []
     if prompt_text is None or len(prompt_text) == 0:
         ref_free = True
@@ -527,13 +560,14 @@ def get_tts_wav(ref_wav_path, prompt_text, prompt_language, text, text_language,
     prompt_language = dict_language[prompt_language]
     text_language = dict_language[text_language]
 
-
     if not ref_free:
         prompt_text = prompt_text.strip("\n")
-        if (prompt_text[-1] not in splits): prompt_text += "。" if prompt_language != "en" else "."
+        if prompt_text[-1] not in splits:
+            prompt_text += "。" if prompt_language != "en" else "."
         print(i18n("实际输入的参考文本:"), prompt_text)
     text = text.strip("\n")
     # if (text[0] not in splits and len(get_first(text)) < 4): text = "。" + text if text_language != "en" else "." + text
+
 
     print(i18n("实际输入的目标文本:"), text)
     zero_wav = np.zeros(
@@ -548,7 +582,7 @@ def get_tts_wav(ref_wav_path, prompt_text, prompt_language, text, text_language,
     if not ref_free:
         with torch.no_grad():
             wav16k, sr = librosa.load(ref_wav_path, sr=16000)
-            if (wav16k.shape[0] > 160000 or wav16k.shape[0] < 48000):
+            if wav16k.shape[0] > 160000 or wav16k.shape[0] < 48000:
                 gr.Warning(i18n("参考音频在3~10秒范围外，请更换！"))
                 raise OSError(i18n("参考音频在3~10秒范围外，请更换！"))
             wav16k = torch.from_numpy(wav16k)
@@ -567,17 +601,17 @@ def get_tts_wav(ref_wav_path, prompt_text, prompt_language, text, text_language,
             prompt = prompt_semantic.unsqueeze(0).to(device)
 
     t1 = ttime()
-    t.append(t1-t0)
+    t.append(t1 - t0)
 
-    if (how_to_cut == i18n("凑四句一切")):
+    if how_to_cut == i18n("凑四句一切"):
         text = cut1(text)
-    elif (how_to_cut == i18n("凑50字一切")):
+    elif how_to_cut == i18n("凑50字一切"):
         text = cut2(text)
-    elif (how_to_cut == i18n("按中文句号。切")):
+    elif how_to_cut == i18n("按中文句号。切"):
         text = cut3(text)
-    elif (how_to_cut == i18n("按英文句号.切")):
+    elif how_to_cut == i18n("按英文句号.切"):
         text = cut4(text)
-    elif (how_to_cut == i18n("按标点符号切")):
+    elif how_to_cut == i18n("按标点符号切"):
         text = cut5(text)
     while "\n\n" in text:
         text = text.replace("\n\n", "\n")
@@ -588,19 +622,24 @@ def get_tts_wav(ref_wav_path, prompt_text, prompt_language, text, text_language,
     audio_opt = []
     ###s2v3暂不支持ref_free
     if not ref_free:
-        phones1,bert1,norm_text1=get_phones_and_bert(prompt_text, prompt_language, version)
+        phones1, bert1, norm_text1 = get_phones_and_bert(
+            prompt_text, prompt_language, version
+        )
 
-    for i_text,text in enumerate(texts):
+    for i_text, text in enumerate(texts):
         # 解决输入目标文本的空行导致报错的问题
-        if (len(text.strip()) == 0):
+        if len(text.strip()) == 0:
             continue
-        if (text[-1] not in splits): text += "。" if text_language != "en" else "."
+        if text[-1] not in splits:
+            text += "。" if text_language != "en" else "."
         print(i18n("实际输入的目标文本(每句):"), text)
-        phones2,bert2,norm_text2=get_phones_and_bert(text, text_language, version)
+        phones2, bert2, norm_text2 = get_phones_and_bert(text, text_language, version)
         print(i18n("前端处理后的文本(每句):"), norm_text2)
         if not ref_free:
             bert = torch.cat([bert1, bert2], 1)
-            all_phoneme_ids = torch.LongTensor(phones1+phones2).to(device).unsqueeze(0)
+            all_phoneme_ids = (
+                torch.LongTensor(phones1 + phones2).to(device).unsqueeze(0)
+            )
         else:
             bert = bert2
             all_phoneme_ids = torch.LongTensor(phones2).to(device).unsqueeze(0)
@@ -611,7 +650,8 @@ def get_tts_wav(ref_wav_path, prompt_text, prompt_language, text, text_language,
         t2 = ttime()
         # cache_key="%s-%s-%s-%s-%s-%s-%s-%s"%(ref_wav_path,prompt_text,prompt_language,text,text_language,top_k,top_p,temperature)
         # print(cache.keys(),if_freeze)
-        if(i_text in cache and if_freeze==True):pred_semantic=cache[i_text]
+        if i_text in cache and if_freeze == True:
+            pred_semantic = cache[i_text]
         else:
             with torch.no_grad():
                 pred_semantic, idx = t2s_model.model.infer_panel(
@@ -626,7 +666,7 @@ def get_tts_wav(ref_wav_path, prompt_text, prompt_language, text, text_language,
                     early_stop_num=hz * max_sec,
                 )
                 pred_semantic = pred_semantic[:, -idx:].unsqueeze(0)
-                cache[i_text]=pred_semantic
+                cache[i_text] = pred_semantic
         t3 = ttime()
         ###v3不存在以下逻辑和inp_refs
         if model_version!="v3":
@@ -695,7 +735,7 @@ def get_tts_wav(ref_wav_path, prompt_text, prompt_language, text, text_language,
         audio_opt.append(audio)
         audio_opt.append(zero_wav_torch)#zero_wav
         t4 = ttime()
-        t.extend([t2 - t1,t3 - t2, t4 - t3])
+        t.extend([t2 - t1, t3 - t2, t4 - t3])
         t1 = ttime()
     print("%.3f\t%.3f\t%.3f\t%.3f" % (t[0], sum(t[1::3]), sum(t[2::3]), sum(t[3::3])))
     audio_opt=torch.cat(audio_opt, 0)#np.concatenate
@@ -737,7 +777,7 @@ def cut1(inp):
     if len(split_idx) > 1:
         opts = []
         for idx in range(len(split_idx) - 1):
-            opts.append("".join(inps[split_idx[idx]: split_idx[idx + 1]]))
+            opts.append("".join(inps[split_idx[idx] : split_idx[idx + 1]]))
     else:
         opts = [inp]
     opts = [item for item in opts if not set(item).issubset(punctuation)]
@@ -773,7 +813,8 @@ def cut3(inp):
     inp = inp.strip("\n")
     opts = ["%s" % item for item in inp.strip("。").split("。")]
     opts = [item for item in opts if not set(item).issubset(punctuation)]
-    return  "\n".join(opts)
+    return "\n".join(opts)
+
 
 def cut4(inp):
     inp = inp.strip("\n")
@@ -785,13 +826,19 @@ def cut4(inp):
 # contributed by https://github.com/AI-Hobbyist/GPT-SoVITS/blob/main/GPT_SoVITS/inference_webui.py
 def cut5(inp):
     inp = inp.strip("\n")
-    punds = {',', '.', ';', '?', '!', '、', '，', '。', '？', '！', ';', '：', '…'}
+    punds = {",", ".", ";", "?", "!", "、", "，", "。", "？", "！", ";", "：", "…"}
     mergeitems = []
     items = []
 
     for i, char in enumerate(inp):
         if char in punds:
-            if char == '.' and i > 0 and i < len(inp) - 1 and inp[i - 1].isdigit() and inp[i + 1].isdigit():
+            if (
+                char == "."
+                and i > 0
+                and i < len(inp) - 1
+                and inp[i - 1].isdigit()
+                and inp[i + 1].isdigit()
+            ):
                 items.append(char)
             else:
                 items.append(char)
@@ -809,17 +856,18 @@ def cut5(inp):
 
 def custom_sort_key(s):
     # 使用正则表达式提取字符串中的数字部分和非数字部分
-    parts = re.split('(\d+)', s)
+    parts = re.split("(\d+)", s)
     # 将数字部分转换为整数，非数字部分保持不变
     parts = [int(part) if part.isdigit() else part for part in parts]
     return parts
 
+
 def process_text(texts):
-    _text=[]
-    if all(text in [None, " ", "\n",""] for text in texts):
+    _text = []
+    if all(text in [None, " ", "\n", ""] for text in texts):
         raise ValueError(i18n("请输入有效文本"))
     for text in texts:
-        if text in  [None, " ", ""]:
+        if text in [None, " ", ""]:
             pass
         else:
             _text.append(text)
@@ -828,7 +876,10 @@ def process_text(texts):
 
 def change_choices():
     SoVITS_names, GPT_names = get_weights_names(GPT_weight_root, SoVITS_weight_root)
-    return {"choices": sorted(SoVITS_names, key=custom_sort_key), "__type__": "update"}, {"choices": sorted(GPT_names, key=custom_sort_key), "__type__": "update"}
+    return {
+        "choices": sorted(SoVITS_names, key=custom_sort_key),
+        "__type__": "update",
+    }, {"choices": sorted(GPT_names, key=custom_sort_key), "__type__": "update"}
 
 
 SoVITS_weight_root=["SoVITS_weights","SoVITS_weights_v2","SoVITS_weights_v3"]
@@ -841,22 +892,26 @@ def get_weights_names(GPT_weight_root, SoVITS_weight_root):
     SoVITS_names = [i for i in pretrained_sovits_name]
     for path in SoVITS_weight_root:
         for name in os.listdir(path):
-            if name.endswith(".pth"): SoVITS_names.append("%s/%s" % (path, name))
+            if name.endswith(".pth"):
+                SoVITS_names.append("%s/%s" % (path, name))
     GPT_names = [i for i in pretrained_gpt_name]
     for path in GPT_weight_root:
         for name in os.listdir(path):
-            if name.endswith(".ckpt"): GPT_names.append("%s/%s" % (path, name))
+            if name.endswith(".ckpt"):
+                GPT_names.append("%s/%s" % (path, name))
     return SoVITS_names, GPT_names
 
 
 SoVITS_names, GPT_names = get_weights_names(GPT_weight_root, SoVITS_weight_root)
 
-def html_center(text, label='p'):
+
+def html_center(text, label="p"):
     return f"""<div style="text-align: center; margin: 100; padding: 50;">
                 <{label} style="margin: 0; padding: 0;">{text}</{label}>
                 </div>"""
 
-def html_left(text, label='p'):
+
+def html_left(text, label="p"):
     return f"""<div style="text-align: left; margin: 0; padding: 0;">
                 <{label} style="margin: 0; padding: 0;">{text}</{label}>
                 </div>"""
@@ -867,22 +922,44 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
         value=i18n("本软件以MIT协议开源, 作者不对软件具备任何控制力, 使用软件者、传播软件导出的声音者自负全责.") + "<br>" + i18n("如不认可该条款, 则不能使用或引用软件包内任何代码和文件. 详见根目录LICENSE.")
     )
     with gr.Group():
-        gr.Markdown(html_center(i18n("模型切换"),'h3'))
+        gr.Markdown(html_center(i18n("模型切换"), "h3"))
         with gr.Row():
-            GPT_dropdown = gr.Dropdown(label=i18n("GPT模型列表"), choices=sorted(GPT_names, key=custom_sort_key), value=gpt_path, interactive=True, scale=14)
-            SoVITS_dropdown = gr.Dropdown(label=i18n("SoVITS模型列表"), choices=sorted(SoVITS_names, key=custom_sort_key), value=sovits_path, interactive=True, scale=14)
-            refresh_button = gr.Button(i18n("刷新模型路径"), variant="primary", scale=14)
-            refresh_button.click(fn=change_choices, inputs=[], outputs=[SoVITS_dropdown, GPT_dropdown])
-        gr.Markdown(html_center(i18n("*请上传并填写参考信息"),'h3'))
+            GPT_dropdown = gr.Dropdown(
+                label=i18n("GPT模型列表"),
+                choices=sorted(GPT_names, key=custom_sort_key),
+                value=gpt_path,
+                interactive=True,
+                scale=14,
+            )
+            SoVITS_dropdown = gr.Dropdown(
+                label=i18n("SoVITS模型列表"),
+                choices=sorted(SoVITS_names, key=custom_sort_key),
+                value=sovits_path,
+                interactive=True,
+                scale=14,
+            )
+            refresh_button = gr.Button(
+                i18n("刷新模型路径"), variant="primary", scale=14
+            )
+            refresh_button.click(
+                fn=change_choices, inputs=[], outputs=[SoVITS_dropdown, GPT_dropdown]
+            )
+        gr.Markdown(html_center(i18n("*请上传并填写参考信息"), "h3"))
         with gr.Row():
-            inp_ref = gr.Audio(label=i18n("请上传3~10秒内参考音频，超过会报错！"), type="filepath", scale=13)
+            inp_ref = gr.Audio(
+                label=i18n("请上传3~10秒内参考音频，超过会报错！"),
+                type="filepath",
+                scale=13,
+            )
             with gr.Column(scale=13):
                 ref_text_free = gr.Checkbox(label=i18n("开启无参考文本模式。不填参考文本亦相当于开启。")+i18n("v3暂不支持该模式，使用了会报错。"), value=False, interactive=True, show_label=True,scale=1)
                 gr.Markdown(html_left(i18n("使用无参考文本模式时建议使用微调的GPT")+"<br>"+i18n("听不清参考音频说的啥(不晓得写啥)可以开。开启后无视填写的参考文本。")))
                 prompt_text = gr.Textbox(label=i18n("参考音频的文本"), value="", lines=5, max_lines=5,scale=1)
             with gr.Column(scale=14):
                 prompt_language = gr.Dropdown(
-                    label=i18n("参考音频的语种"), choices=list(dict_language.keys()), value=i18n("中文"),
+                    label=i18n("参考音频的语种"),
+                    choices=list(dict_language.keys()),
+                    value=i18n("中文"),
                 )
                 inp_refs = gr.File(label=i18n("可选项：通过拖拽多个文件上传多个参考音频（建议同性），平均融合他们的音色。如不填写此项，音色由左侧单个参考音频控制。如是微调模型，建议参考音频全部在微调训练集音色内，底模不用管。"),file_count="multiple")if model_version!="v3"else gr.File(label=i18n("可选项：通过拖拽多个文件上传多个参考音频（建议同性），平均融合他们的音色。如不填写此项，音色由左侧单个参考音频控制。如是微调模型，建议参考音频全部在微调训练集音色内，底模不用管。"),file_count="multiple",visible=False)
                 sample_steps = gr.Radio(label=i18n("采样步数,如果觉得电,提高试试,如果觉得慢,降低试试"),value=32,choices=[4,8,16,32],visible=True)if model_version=="v3"else gr.Radio(label=i18n("采样步数,如果觉得电,提高试试,如果觉得慢,降低试试"),choices=[4,8,16,32],visible=False,value=32)
@@ -890,17 +967,30 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
         gr.Markdown(html_center(i18n("*请填写需要合成的目标文本和语种模式"),'h3'))
         with gr.Row():
             with gr.Column(scale=13):
-                text = gr.Textbox(label=i18n("需要合成的文本"), value="", lines=26, max_lines=26)
+                text = gr.Textbox(
+                    label=i18n("需要合成的文本"), value="", lines=26, max_lines=26
+                )
             with gr.Column(scale=7):
                 text_language = gr.Dropdown(
-                        label=i18n("需要合成的语种")+i18n(".限制范围越小判别效果越好。"), choices=list(dict_language.keys()), value=i18n("中文"), scale=1
-                    )
+                    label=i18n("需要合成的语种") + i18n(".限制范围越小判别效果越好。"),
+                    choices=list(dict_language.keys()),
+                    value=i18n("中文"),
+                    scale=1,
+                )
                 how_to_cut = gr.Dropdown(
-                        label=i18n("怎么切"),
-                        choices=[i18n("不切"), i18n("凑四句一切"), i18n("凑50字一切"), i18n("按中文句号。切"), i18n("按英文句号.切"), i18n("按标点符号切"), ],
-                        value=i18n("凑四句一切"),
-                        interactive=True, scale=1
-                    )
+                    label=i18n("怎么切"),
+                    choices=[
+                        i18n("不切"),
+                        i18n("凑四句一切"),
+                        i18n("凑50字一切"),
+                        i18n("按中文句号。切"),
+                        i18n("按英文句号.切"),
+                        i18n("按标点符号切"),
+                    ],
+                    value=i18n("凑四句一切"),
+                    interactive=True,
+                    scale=1,
+                )
                 gr.Markdown(value=html_center(i18n("语速调整，高为更快")))
                 if_freeze=gr.Checkbox(label=i18n("是否直接对上次合成结果调整语速和音色。防止随机性。"), value=False, interactive=True,show_label=True, scale=1)
                 with gr.Row():
@@ -915,7 +1005,9 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
             #     phoneme=gr.Textbox(label=i18n("音素框"), value="")
             #     get_phoneme_button = gr.Button(i18n("目标文本转音素"), variant="primary")
         with gr.Row():
-            inference_button = gr.Button(i18n("合成语音"), variant="primary", size='lg', scale=25)
+            inference_button = gr.Button(
+                i18n("合成语音"), variant="primary", size="lg", scale=25
+            )
             output = gr.Audio(label=i18n("输出的语音"), scale=14)
 
         inference_button.click(
@@ -942,8 +1034,8 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
         #     button5.click(cut5, [text_inp], [text_opt])
         # gr.Markdown(html_center(i18n("后续将支持转音素、手工修改音素、语音合成分步执行。")))
 
-if __name__ == '__main__':
-    app.queue().launch(#concurrency_count=511, max_size=1022
+if __name__ == "__main__":
+    app.queue().launch(  # concurrency_count=511, max_size=1022
         server_name="0.0.0.0",
         inbrowser=True,
         share=is_share,
