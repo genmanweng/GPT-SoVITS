@@ -17,7 +17,7 @@ RUN apt-get update && \
 # Copy only requirements.txt initially to leverage Docker cache
 WORKDIR /workspace
 COPY requirements.txt /workspace/
-RUN pip install --no-cache-dir -r requirements.txt
+RUN CMAKE_POLICY_VERSION_MINIMUM=3.5 && pip install --no-cache-dir -r requirements.txt
 
 # Define a build-time argument for image type
 ARG IMAGE_TYPE=full
@@ -27,10 +27,10 @@ ARG IMAGE_TYPE=full
 COPY ./Docker /workspace/Docker 
 # elite 类型的镜像里面不包含额外的模型
 RUN if [ "$IMAGE_TYPE" != "elite" ]; then \
-        chmod +x /workspace/Docker/download.sh && \
-        /workspace/Docker/download.sh && \
-        python /workspace/Docker/download.py && \
-        python -m nltk.downloader averaged_perceptron_tagger cmudict; \
+    chmod +x /workspace/Docker/download.sh && \
+    /workspace/Docker/download.sh && \
+    python /workspace/Docker/download.py && \
+    python -m nltk.downloader averaged_perceptron_tagger cmudict; \
     fi
 
 
