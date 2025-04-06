@@ -619,7 +619,9 @@ def get_tts_wav(
     output_path = "output.wav"
     from scipy.io.wavfile import write
 
-    write("/workspace/video_file/output.wav", hps.data.sampling_rate, audio_output)
+    write(
+        "/home/gpt_sovits/video_file/output.wav", hps.data.sampling_rate, audio_output
+    )
     return output_path
 
     # write(output_path, hps.data.sampling_rate, audio_output)
