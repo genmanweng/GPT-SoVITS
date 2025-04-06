@@ -1,5 +1,5 @@
 # Base CUDA image
-FROM cnstark/pytorch:2.0.1-py3.9.17-cuda11.8.0-ubuntu20.04
+FROM cnstark/pytorch:2.3.1-py3.10.15-cuda12.1.0-ubuntu22.04
 
 LABEL maintainer="breakstring@hotmail.com"
 LABEL version="dev-20240209"
@@ -27,10 +27,10 @@ ARG IMAGE_TYPE=full
 COPY ./Docker /workspace/Docker 
 # elite 类型的镜像里面不包含额外的模型
 RUN if [ "$IMAGE_TYPE" != "elite" ]; then \
-        chmod +x /workspace/Docker/download.sh && \
-        /workspace/Docker/download.sh && \
-        python /workspace/Docker/download.py && \
-        python -m nltk.downloader averaged_perceptron_tagger cmudict; \
+    chmod +x /workspace/Docker/download.sh && \
+    /workspace/Docker/download.sh && \
+    python /workspace/Docker/download.py && \
+    python -m nltk.downloader averaged_perceptron_tagger cmudict; \
     fi
 
 
