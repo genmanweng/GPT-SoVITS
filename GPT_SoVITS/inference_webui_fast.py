@@ -515,8 +515,8 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
 if __name__ == "__main__":
     app.queue().launch(  # concurrency_count=511, max_size=1022
         server_name="0.0.0.0",
-        inbrowser=True,
-        share=is_share,
+        inbrowser=False,
+        share=False,
         server_port=infer_ttswebui,
         quiet=True,
     )

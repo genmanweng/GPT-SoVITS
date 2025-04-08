@@ -740,6 +740,7 @@ class TTS:
         actual_seed = set_seed(seed)
         parallel_infer = inputs.get("parallel_infer", True)
         repetition_penalty = inputs.get("repetition_penalty", 1.35)
+        output_path = inputs.get("output_path", "output.mp3")
 
         if parallel_infer:
             print(i18n("并行推理模式已开启"))
@@ -1027,6 +1028,7 @@ class TTS:
                         speed_factor,
                         False,
                         fragment_interval,
+                        output_path=output_path,
                     )
                 else:
                     audio.append(batch_audio_fragment)
@@ -1051,6 +1053,7 @@ class TTS:
                     speed_factor,
                     split_bucket,
                     fragment_interval,
+                    output_path=output_path,
                 )
 
         except Exception as e:
@@ -1088,6 +1091,7 @@ class TTS:
         speed_factor: float = 1.0,
         split_bucket: bool = True,
         fragment_interval: float = 0.3,
+        output_path: str = "output.mp3",  # 新增參數：MP3 輸出路徑
     ) -> Tuple[int, np.ndarray]:
         zero_wav = torch.zeros(
             int(self.configs.sampling_rate * fragment_interval),
@@ -1113,6 +1117,12 @@ class TTS:
 
         audio = np.concatenate(audio, 0)
         audio = (audio * 32768).astype(np.int16)
+        from pydub import AudioSegment
+
+        audio_segment = AudioSegment(
+            audio.tobytes(), frame_rate=sr, sample_width=2, channels=1
+        )
+        audio_segment.export(output_path, format="mp3")
 
         # try:
         #     if speed_factor != 1.0:
