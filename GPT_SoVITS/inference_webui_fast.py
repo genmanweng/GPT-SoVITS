@@ -140,6 +140,7 @@ def inference(
     keep_random,
     parallel_infer,
     repetition_penalty,
+    output_path,
 ):
 
     seed = -1 if keep_random else seed
@@ -167,6 +168,7 @@ def inference(
         "seed": actual_seed,
         "parallel_infer": parallel_infer,
         "repetition_penalty": repetition_penalty,
+        "output_path": output_path,
     }
     for item in tts_pipeline.run(inputs):
         yield item, actual_seed
@@ -460,6 +462,7 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
                 keep_random,
                 parallel_infer,
                 repetition_penalty,
+                "output.mp3",
             ],
             [output, seed],
         )
