@@ -425,6 +425,9 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
                         interactive=True,
                         show_label=True,
                     )
+                    output_path = gr.Textbox(
+                        label=i18n("輸出mp3"), value="output.mp3", lines=1
+                    )
 
                 with gr.Row():
                     seed = gr.Number(label=i18n("随机种子"), value=-1)
@@ -462,7 +465,7 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
                 keep_random,
                 parallel_infer,
                 repetition_penalty,
-                "output.mp3",
+                output_path,
             ],
             [output, seed],
         )
