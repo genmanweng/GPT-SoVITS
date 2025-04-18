@@ -51,7 +51,7 @@ version = os.environ.get("version", "v2")
 
 import gradio as gr
 
-os.environ["GRADIO_TEMP_DIR"] = "/home/gr/temp"
+os.environ["GRADIO_TEMP_DIR"] = "/home/gr"
 
 from TTS_infer_pack.TTS import TTS, TTS_Config
 from TTS_infer_pack.text_segmentation_method import get_method
