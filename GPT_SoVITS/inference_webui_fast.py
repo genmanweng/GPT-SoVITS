@@ -49,10 +49,9 @@ cnhubert_base_path = os.environ.get("cnhubert_base_path", None)
 bert_path = os.environ.get("bert_path", None)
 version = os.environ.get("version", "v2")
 
-import gradio as gr
 
-gr.temp_dir = "/home/gr/temp"  # os.environ.get("gr_temp_dir", "/home/gr/temp")
-os.makedirs(gr.temp_dir, exist_ok=True)
+os.environ["GRADIO_TEMP_DIR"] = "/home/gr"
+
 from TTS_infer_pack.TTS import TTS, TTS_Config
 from TTS_infer_pack.text_segmentation_method import get_method
 from tools.i18n.i18n import I18nAuto, scan_language_list
