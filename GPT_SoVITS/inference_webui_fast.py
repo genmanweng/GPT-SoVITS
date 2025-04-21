@@ -11,7 +11,9 @@ import random
 import os, re, logging
 import sys
 import nltk
+import argparse
 
+os.environ["GRADIO_TEMP_DIR"] = "/home/gr"
 nltk.download("averaged_perceptron_tagger_eng")
 now_dir = os.getcwd()
 sys.path.append(now_dir)
@@ -51,7 +53,6 @@ version = os.environ.get("version", "v2")
 
 import gradio as gr
 
-os.environ["GRADIO_TEMP_DIR"] = "/home/gr"
 
 from TTS_infer_pack.TTS import TTS, TTS_Config
 from TTS_infer_pack.text_segmentation_method import get_method
@@ -522,10 +523,17 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
         gr.Markdown(value=i18n("后续将支持转音素、手工修改音素、语音合成分步执行。"))
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="port")
+    parser.add_argument(
+        "--port", type=int, default=9872, help="開啟的port（默認為9872）"
+    )
+    args = parser.parse_args()
+    port = args.port
     app.queue().launch(  # concurrency_count=511, max_size=1022
         server_name="0.0.0.0",
         inbrowser=False,
         share=False,
-        server_port=infer_ttswebui,
+        server_port=port,
         quiet=True,
     )
