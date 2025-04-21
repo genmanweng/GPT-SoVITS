@@ -13,6 +13,13 @@ import sys
 import nltk
 import argparse
 
+parser = argparse.ArgumentParser(description="port")
+parser.add_argument("--port", type=int, default=9872, help="開啟的port（默認為9872）")
+parser.add_argument("--device", type=int, default="cuda", help="默認 cuda")
+args = parser.parse_args()
+port = args.port
+device = args.device
+
 os.environ["GRADIO_TEMP_DIR"] = "/home/gr"
 nltk.download("averaged_perceptron_tagger_eng")
 now_dir = os.getcwd()
@@ -66,7 +73,7 @@ i18n = I18nAuto(language=language)
 
 # os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'  # 确保直接启动推理UI时也能够设置。
 
-if torch.cuda.is_available():
+if args.device == "cuda" and torch.cuda.is_available():
     device = "cuda"
 # elif torch.backends.mps.is_available():
 #     device = "mps"
@@ -525,12 +532,6 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="port")
-    parser.add_argument(
-        "--port", type=int, default=9872, help="開啟的port（默認為9872）"
-    )
-    args = parser.parse_args()
-    port = args.port
     app.queue().launch(  # concurrency_count=511, max_size=1022
         server_name="0.0.0.0",
         inbrowser=False,
