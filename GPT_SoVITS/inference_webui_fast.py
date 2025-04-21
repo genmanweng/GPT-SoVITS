@@ -15,7 +15,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description="port")
 parser.add_argument("--port", type=int, default=9872, help="開啟的port（默認為9872）")
-parser.add_argument("--device", type=int, default="cuda", help="默認 cuda")
+parser.add_argument("--device", type=str, default="cuda", help="默認 cuda")
 args = parser.parse_args()
 port = args.port
 device = args.device
